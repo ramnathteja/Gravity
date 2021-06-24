@@ -1,72 +1,87 @@
-function boggleBoard(board, words) {
-    let found = [];
-    for (const word of words) {
-        if (findThisWord(word, board))
-            found.push(word);
+class SuffixTries {
+    constructor(words) {
+        this.root = {};
+        this.endSymbol = '*';
+        this.constructTrie(words);
     }
-    return found;
-}
 
-function findThisWord(word, board) {
-    let visited = new Array(board.length);
-    visited = board.map(row => (row).map(col => false));
-    for (let i = 0; i < board.length; i++) {
-        for (let j = 0; j < board[0].length; j++) {
-            if (visited[i][j] === false && word.charAt(0) === (board[i][j]))
-                if (assist(i, j, word, visited, board)) return true;
+    constructTrie(words) {
+        for (const word of words) {
+            this.assist(word);
         }
     }
-    return false;
-}
 
-function assist(i, j, word, visited, board) {
-    let neighbours = [{ i: i, j: j }];
-    while (neighbours.length > 0) {
-        let current = neighbours.pop();
-        i = current.i;
-        j = current.j;
-        if (visited[i][j])
-            continue;
-        if (board[i][j] === word.charAt(0)) {
-            word = ''.concat(word.substring(1, word.length));
-        } else continue;
-        visited[i][j] = true;
-        if (word.length === 0) return true;
-        getNewNeighbours(i, j, neighbours, visited, board);
+    assist(word) {
+        let node = this.root;
+        for (let i = 0; i < word.length; i++) {
+            let letter = word.charAt(i);
+            if (!(letter in node))
+                node[letter] = {};
+            node = node[letter];
+        }
+        node[this.endSymbol] = word;
     }
-    if (word.length === 0) return true;
-    return false;
 }
 
-function getNewNeighbours(i, j, neighbours, visited, board) {
+
+
+function boggleBoard(board, words) {
+    let visited = new Array(board.length);
+    visited = board.map(row => row.map(col => false));
+    let results = new Set();
+    const trie = new SuffixTries(words);
+    for (let i = 0; i < board.length; i++) {
+        for (let j = 0; j < board[0].length; j++) {
+            searchTheBoard(i, j, trie.root, board, visited, results);
+        }
+    }
+    return [...results];
+}
+
+function searchTheBoard(i, j, node, board, visited, results) {
+    let neighbours = [];
+    if (visited[i][j]) return;
+    let letter = board[i][j];
+    if (!(letter in node)) return;
+    node = node[letter];
+    visited[i][j] = true;
+    if('*' in node) results.add(node['*']);
+    getNewNeighbours(i,j,neighbours,board);
+    while(neighbours.length > 0) {
+        let current = neighbours.pop();
+        searchTheBoard(current.i, current.j, node, board, visited, results);
+    }
+    visited[i][j] = false;
+    return;
+}
+
+
+
+function getNewNeighbours(i, j, neighbours, board) {
     //top
-    if (i > 0 && visited[i - 1][j] === false) neighbours.push({ i: i - 1, j: j });
+    if (i > 0) neighbours.push({ i: i - 1, j: j });
     //bottom
-    if (i < board.length - 1 && visited[i + 1][j] === false) neighbours.push({ i: i + 1, j: j });
+    if (i < board.length - 1) neighbours.push({ i: i + 1, j: j });
     //left
-    if (j > 0 && visited[i][j - 1] === false) neighbours.push({ i: i, j: j - 1 });
+    if (j > 0) neighbours.push({ i: i, j: j - 1 });
     //right
-    if (j < board[0].length - 1 && visited[i][j + 1] === false) neighbours.push({ i: i, j: j + 1 });
+    if (j < board[0].length - 1) neighbours.push({ i: i, j: j + 1 });
     //topLeft and topRight
     if (i > 0) {
         if (j > 0) {
-            if (visited[i - 1][j - 1] === false)
-                neighbours.push({ i: i - 1, j: j - 1 })
+            neighbours.push({ i: i - 1, j: j - 1 });
         }
         if (j < board[0].length - 1) {
-            if (visited[i - 1][j + 1] === false)
-                neighbours.push({ i: i - 1, j: j + 1 });
+            neighbours.push({ i: i - 1, j: j + 1 });
         }
     }
     //bottomLeft and bottomRight
     if (i < board.length - 1) {
         if (j > 0) {
-            if (visited[i + 1][j - 1] === false)
-                neighbours.push({ i: i + 1, j: j - 1 });
+            neighbours.push({ i: i + 1, j: j - 1 });
         }
         if (j < board[0].length - 1) {
-            if (visited[i + 1][j + 1] === false)
-                neighbours.push({ i: i + 1, j: j + 1 });
+            neighbours.push({ i: i + 1, j: j + 1 });
         }
     }
     return;
