@@ -1,3 +1,4 @@
+// This is the class of the input linked list.
 class LinkedList {
     constructor(value) {
         this.value = value;
@@ -5,43 +6,62 @@ class LinkedList {
     }
 }
 
+
+
+
 function shiftLinkedList(head, k) {
-    let node = head;
-    let count = 0;
-    let hashMap = new Map();
+    //*edge1
+    if (k === 0) return head;
+    let boundary = findTheLength(head);
+    if (k > boundary.len) {
+        k = k % boundary.len;
+        if (k === 0) return head;
+    }
+    metrics = findTheRequired(head, k, boundary);
+    return swap(metrics);
+}
+
+function findTheLength(node) {
+    let counter = 0;
+    let boundary = {};
     while (node != null) {
-        hashMap.set(count, node);
+        counter++;
+        boundary.lastNode = node;
         node = node.next;
-        count++;
     }
-    if (Math.abs(k) > hashMap.size)
-        k = hashMap.size % k;
-    if (k === 0) return hashMap.get(0);
-    return marchForward(hashMap, k);
+    boundary.len = counter;
+    return boundary;
 }
 
-function marchForward(hashMap, k) {
-    let size  = hashMap.size;
-    let newHeadPosition = null;
-    let newTailPosition = null;
-    if (k < 0) {
-        newHeadPosition = k;
-        newTailPosition = k - 1;
-    } if (k > 0) {
-        newHeadPosition = size - k;
-        newTailPosition = size - k - 1;
+function findTheRequired(head, k, boundary) {
+    let length = boundary.len;
+    let metrics = {};
+    metrics.head = head;
+    metrics.last = boundary.lastNode;
+    if (k > 0) {
+        positionOfInterest = length - k;
+    } else {
+        positionOfInterest = 0 + k;
     }
-    return swap(newHeadPosition, newTailPosition, hashMap);
-
-
+    let currentPosition = 0;
+    let node = head;
+    while (currentPosition != positionOfInterest) {
+        currentPosition++;
+        node = node.next;
+    }
+    metrics.positionOfInterest = node;
 }
 
-function swap(newHeadPosition, newTailPosition, hashMap) {
-    let size  = hashMap.size;
-    let head = hashMap.get(0);
-    let tail = hashMap.get(size - 1);
-    tail.next = head;
-    let newTail = hashMap.get(newTailPosition);
-    newTail.next = null;
-    return hashMap.get(newHeadPosition);
+function swap(metrics) {
+   let lastNode = metrics.last;
+   let head = metrics.head;
+   let newLast = metrics.positionOfInterest;
+   lastNode.next = head;
+   head = newLast.next;
+   newLast.next = null;
+   return head;
 }
+
+// Do not edit the lines below.
+//   exports.LinkedList = LinkedList;
+exports.shiftLinkedList = shiftLinkedList;
